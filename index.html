@@ -14,50 +14,65 @@
         }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 20px;
-            width: 20px;
+            height: 16px;
+            width: 16px;
             border-radius: 50%;
             background: #4fd1c5;
-            margin-top: -8px;
+            margin-top: -6px;
             box-shadow: 0 0 10px rgba(79, 209, 197, 0.5);
+            border: 1px solid #000;
         }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
             height: 4px;
             cursor: pointer;
-            background: #2d3748;
+            background: #2d3748; 
             border-radius: 2px;
+            border: 1px solid #1a202c;
         }
         input[type=range]:focus {
             outline: none;
         }
         
+        /* Vertical Slider Specifics for Envelopes */
+        input[type=range][style*="slider-vertical"] {
+             width: 8px; /* Visual width of track area */
+        }
+        /* Note: Vertical sliders styling varies by browser. 
+           We use a specific class to try and force consistency */
+        .vertical-slider {
+            -webkit-appearance: slider-vertical; 
+            width: 20px;
+            accent-color: #4fd1c5; /* Modern browser support */
+            background: transparent;
+        }
+
         .screen-container {
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
             border: 1px solid #333;
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            /* bg-black removed here to allow transparency via utility classes */
         }
         
-        /* Visual feedback for Hold Mode */
         .screen-hold-active {
             border-color: #4fd1c5;
             box-shadow: inset 0 0 30px rgba(79, 209, 197, 0.3);
         }
 
-        /* Prevent scrolling on touch */
         body {
             overscroll-behavior: none;
             touch-action: manipulation;
+            background-color: #050505; 
         }
         
         .control-group {
-            background: rgba(26, 32, 44, 0.8);
+            background: rgba(10, 10, 10, 0.85);
             border: 1px solid #2d3748;
             border-radius: 0.5rem;
             padding: 0.75rem;
+            backdrop-filter: blur(4px);
         }
 
-        /* Active state for touch pad */
         #touch-pad:active {
             background: rgba(79, 209, 197, 0.1);
             border-color: #4fd1c5;
@@ -69,7 +84,6 @@
             align-items: center;
         }
         
-        /* Hold Button Active State */
         .hold-active {
             background-color: #4fd1c5 !important;
             color: #1a202c !important;
@@ -77,30 +91,38 @@
             border-color: #fff !important;
         }
 
-        /* Input Source Toggle */
-        .source-btn.active {
-            background-color: #4fd1c5;
-            color: #1a202c;
-            font-weight: bold;
+        /* Toggle Button Styling */
+        .toggle-btn {
+            background-color: #1a202c;
+            color: #718096;
+            border: 1px solid #4a5568;
+        }
+        .toggle-btn.active {
+            background-color: #2d3748;
+            color: #4fd1c5;
+            border-color: #4fd1c5;
+            box-shadow: 0 0 5px rgba(79, 209, 197, 0.3);
         }
 
-        /* Select Styling */
         select {
-            background-color: #1a202c;
+            background-color: #000;
             color: #e2e8f0;
             border: 1px solid #4a5568;
             border-radius: 0.25rem;
             padding: 0.25rem;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             width: 100%;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-300 font-sans h-screen flex flex-col overflow-hidden">
+<body class="text-gray-300 font-sans h-screen flex flex-col overflow-hidden relative">
 
-    <!-- Header & Mode Switch -->
-    <header class="flex-none p-3 border-b border-gray-800 flex justify-between items-center bg-gray-900 z-10">
-        <h1 class="text-xl font-bold text-teal-400 tracking-wider">LUMINA <span class="text-xs text-gray-500 font-normal">MODULAR</span></h1>
+    <!-- Background Particles Canvas -->
+    <canvas id="particle-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0"></canvas>
+
+    <!-- Header -->
+    <header class="flex-none p-3 border-b border-gray-800 flex justify-between items-center bg-black/30 backdrop-blur-md z-10">
+        <h1 class="text-xl font-bold text-teal-400 tracking-wider">LUMINA <span class="text-xs text-gray-500 font-normal">MOTION SYNTH</span></h1>
         
         <div class="flex items-center gap-2">
             <span class="text-[10px] text-teal-600 animate-pulse hidden" id="status-indicator">● LIVE</span>
@@ -112,11 +134,9 @@
     </header>
 
     <!-- Main Visual Area -->
-    <div id="main-screen" class="flex-none relative h-48 bg-black screen-container w-full overflow-hidden">
-        <!-- Visualizer Canvas -->
+    <!-- Changed h-48 (12rem) to h-64 (16rem) for ~35% increase. Changed bg-black to bg-black/30 for transparency. -->
+    <div id="main-screen" class="flex-none relative h-64 bg-black/30 screen-container w-full overflow-hidden z-10 backdrop-blur-sm">
         <canvas id="visualizer" class="absolute top-0 left-0 w-full h-full z-10 opacity-80 pointer-events-none"></canvas>
-        
-        <!-- Video Element for Input -->
         <video id="webcam" class="absolute top-0 left-0 w-full h-full object-cover opacity-30 z-0 hidden" playsinline muted></video>
         
         <!-- Touch Surface Overlay -->
@@ -124,8 +144,6 @@
             <span class="pointer-events-none text-gray-400 text-xs select-none opacity-60 font-bold mb-1 bg-black/50 px-2 rounded text-center" id="pad-hint">
                 Touch to Play
             </span>
-            
-            <!-- Dynamic Labels (Updated by JS) -->
             <div class="pointer-events-none text-[10px] text-teal-500 opacity-60 flex justify-between w-full absolute bottom-2 px-4 font-mono">
                 <span id="label-x-low">Low</span>
                 <span id="label-x-high">High</span>
@@ -136,51 +154,98 @@
             </div>
         </div>
 
-        <!-- Feedback Overlay -->
-        <div id="sensor-feedback" class="absolute top-2 right-2 z-30 bg-black/60 px-2 py-1 rounded text-xs text-teal-300 hidden font-mono border border-teal-900">
-            IN: <span id="input-val">0</span>%
+        <div id="sensor-feedback" class="absolute top-2 right-2 z-30 flex flex-col gap-1 items-end pointer-events-none">
+            <span class="bg-black/60 px-2 py-0.5 rounded text-[10px] text-teal-300 hidden font-mono border border-teal-900" id="cam-val-display">CAM: 0%</span>
+            <span class="bg-black/60 px-2 py-0.5 rounded text-[10px] text-purple-300 hidden font-mono border border-purple-900" id="tilt-val-display">TILT: 0%</span>
         </div>
     </div>
 
     <!-- Controls Container -->
-    <main class="flex-1 overflow-y-auto p-4 space-y-4 pb-20">
+    <main class="flex-1 overflow-y-auto p-4 space-y-4 z-10">
         
         <!-- Global Controls -->
-        <div class="control-group flex items-center justify-between gap-4 bg-gray-800/50">
+        <div class="control-group flex items-center justify-between gap-4">
             <div class="flex-1">
                 <label class="text-[10px] font-bold text-teal-500 uppercase block mb-1">Master Volume</label>
                 <input type="range" id="master-vol" min="0" max="1" step="0.01" value="0.5">
             </div>
             <div class="flex-none">
-                <button id="hold-btn" class="border-2 border-teal-600 text-teal-500 text-xs font-bold py-2 px-4 rounded transition-all">
+                <button id="hold-btn" class="border-2 border-teal-600 text-teal-500 text-xs font-bold py-2 px-4 rounded transition-all hover:bg-teal-900/50">
                     HOLD NOTE
                 </button>
             </div>
         </div>
 
-        <!-- NEW: MODULATION MATRIX -->
-        <div class="control-group border border-teal-900 shadow-[0_0_15px_rgba(20,184,166,0.1)]">
+        <!-- INPUT CONFIGURATION -->
+        <div class="control-group border border-gray-700">
+            <h3 class="text-xs font-bold text-gray-400 uppercase mb-2">Input Sources</h3>
+            <div class="grid grid-cols-2 gap-3">
+                
+                <!-- Camera Config -->
+                <div class="bg-black/40 p-2 rounded border border-gray-800">
+                    <button class="toggle-btn w-full py-1 text-xs rounded mb-2 transition-colors font-bold active" id="btn-toggle-cam">ENABLE CAMERA</button>
+                    <div id="cam-controls" class="transition-opacity">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[10px] text-gray-500">Sensitivity</label>
+                            <button id="calibrate-btn" class="text-[9px] bg-gray-800 px-2 py-0.5 rounded text-white border border-gray-700">Calib</button>
+                        </div>
+                        <input type="range" id="sensitivity" min="0" max="100" value="60">
+                    </div>
+                </div>
+
+                <!-- Tilt Config -->
+                <div class="bg-black/40 p-2 rounded border border-gray-800">
+                    <button class="toggle-btn w-full py-1 text-xs rounded mb-2 transition-colors font-bold active" id="btn-toggle-tilt">ENABLE TILT</button>
+                    <div id="tilt-controls" class="transition-opacity">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-[10px] text-gray-500">Range Scale</label>
+                            <button id="sensor-perm-btn" class="text-[9px] bg-purple-900 px-2 py-0.5 rounded text-white hidden">Permit</button>
+                        </div>
+                        <input type="range" id="tilt-sensitivity" min="0.5" max="3.0" step="0.1" value="1.5">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODULATION MATRIX -->
+        <div class="control-group border border-teal-900/50 shadow-[0_0_15px_rgba(20,184,166,0.05)]">
             <h3 class="text-xs font-bold text-teal-500 uppercase mb-3 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-teal-500"></span> Modulation Matrix
+                <span class="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_5px_#4fd1c5]"></span> Modulation Matrix
             </h3>
-            <div class="grid grid-cols-3 gap-3">
-                <!-- Source 1: Camera/Tilt -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <!-- Camera -->
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 mb-1">Main Input</label>
-                    <select id="map-input" class="focus:border-teal-500 focus:outline-none">
+                    <label class="block text-[10px] font-bold text-teal-400 mb-1">Camera →</label>
+                    <select id="map-camera" class="focus:border-teal-500 focus:outline-none">
+                        <option value="pitch">Pitch</option>
+                        <option value="filter">Filter</option>
+                        <option value="lfoRate">LFO Rate</option>
+                        <option value="lfoDepth">LFO Depth</option>
+                        <option value="resonance">Resonance</option>
+                        <option value="distortion">Distortion</option>
+                        <option value="reverbMix" selected>Reverb Mix</option>
+                        <option value="none">None</option>
+                    </select>
+                </div>
+
+                <!-- Tilt -->
+                <div>
+                    <label class="block text-[10px] font-bold text-purple-400 mb-1">Tilt →</label>
+                    <select id="map-tilt" class="focus:border-teal-500 focus:outline-none">
                         <option value="pitch" selected>Pitch</option>
                         <option value="filter">Filter</option>
                         <option value="lfoRate">LFO Rate</option>
                         <option value="lfoDepth">LFO Depth</option>
                         <option value="resonance">Resonance</option>
                         <option value="distortion">Distortion</option>
+                        <option value="reverbMix">Reverb Mix</option>
                         <option value="none">None</option>
                     </select>
                 </div>
 
-                <!-- Source 2: Touch X -->
+                <!-- Touch X -->
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 mb-1">Touch X</label>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1">Touch X →</label>
                     <select id="map-touch-x" class="focus:border-teal-500 focus:outline-none">
                         <option value="pitch">Pitch</option>
                         <option value="filter" selected>Filter</option>
@@ -188,13 +253,14 @@
                         <option value="lfoDepth">LFO Depth</option>
                         <option value="resonance">Resonance</option>
                         <option value="distortion">Distortion</option>
+                        <option value="reverbMix">Reverb Mix</option>
                         <option value="none">None</option>
                     </select>
                 </div>
 
-                <!-- Source 3: Touch Y -->
+                <!-- Touch Y -->
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 mb-1">Touch Y</label>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1">Touch Y →</label>
                     <select id="map-touch-y" class="focus:border-teal-500 focus:outline-none">
                         <option value="pitch">Pitch</option>
                         <option value="filter">Filter</option>
@@ -202,140 +268,194 @@
                         <option value="lfoDepth">LFO Depth</option>
                         <option value="resonance">Resonance</option>
                         <option value="distortion">Distortion</option>
+                        <option value="reverbMix">Reverb Mix</option>
                         <option value="none">None</option>
                     </select>
                 </div>
             </div>
         </div>
 
-        <!-- Input Source Selector -->
-        <div class="control-group border-teal-900/50">
-            <div class="flex justify-between items-center mb-3">
-                <h3 class="text-xs font-bold text-teal-500 uppercase">Input Source Config</h3>
-            </div>
-            
-            <div class="flex bg-gray-800 rounded p-1 mb-3">
-                <button class="source-btn flex-1 py-1 text-xs rounded transition-colors active" id="btn-cam-mode">CAMERA</button>
-                <button class="source-btn flex-1 py-1 text-xs rounded transition-colors" id="btn-tilt-mode">TILT</button>
-            </div>
-
-            <div id="camera-controls">
-                <div class="flex justify-between items-center mb-1">
-                    <label class="text-[10px] text-gray-400">Sensitivity</label>
-                    <button id="calibrate-btn" class="text-[10px] bg-gray-700 hover:bg-gray-600 px-2 py-0.5 rounded text-white">Calibrate</button>
-                </div>
-                <input type="range" id="sensitivity" min="0" max="100" value="60">
-            </div>
-
-            <div id="tilt-controls" class="hidden">
-                <div class="flex justify-between items-center mb-1">
-                    <label class="text-[10px] text-gray-400">Range Scale</label>
-                    <button id="sensor-perm-btn" class="text-[10px] bg-teal-700 hover:bg-teal-600 px-2 py-0.5 rounded text-white hidden">Enable</button>
-                </div>
-                <input type="range" id="tilt-sensitivity" min="0.5" max="3.0" step="0.1" value="1.5">
-            </div>
-        </div>
-
-        <!-- Oscillator -->
+        <!-- Filter & Envelope -->
         <div class="control-group">
-            <h3 class="text-xs font-bold text-teal-500 uppercase mb-3">Oscillator</h3>
-            <div class="flex gap-2 mb-2 justify-between">
-                <button class="wave-btn flex-1 py-2 bg-gray-700 rounded text-xs active:bg-teal-600 border border-gray-600" data-type="sine">Sine</button>
-                <button class="wave-btn flex-1 py-2 bg-gray-700 rounded text-xs active:bg-teal-600 border border-gray-600" data-type="sawtooth">Saw</button>
-                <button class="wave-btn flex-1 py-2 bg-gray-700 rounded text-xs active:bg-teal-600 border border-gray-600" data-type="square">Sqr</button>
-                <button class="wave-btn flex-1 py-2 bg-gray-700 rounded text-xs active:bg-teal-600 border border-gray-600" data-type="triangle">Tri</button>
-            </div>
-            <div class="text-center text-xs text-teal-300" id="current-wave">Current: Sine</div>
-        </div>
-
-        <!-- Filter -->
-        <div class="control-group">
-            <h3 class="text-xs font-bold text-teal-500 uppercase mb-3">Filter / Distortion</h3>
+            <h3 class="text-xs font-bold text-teal-500 uppercase mb-3">Filter & Envelope</h3>
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block text-xs font-bold mb-1">Base Cutoff</label>
-                    <input type="range" id="filter-cutoff" min="50" max="5000" value="1000">
+                    <input type="range" id="filter-cutoff" min="50" max="5000" value="1040">
                 </div>
                 <div>
                     <label class="block text-xs font-bold mb-1">Resonance</label>
-                    <input type="range" id="filter-res" min="0" max="20" value="5">
+                    <input type="range" id="filter-res" min="0" max="20" value="11.2">
                 </div>
             </div>
-             <div class="grid grid-cols-1 gap-4 mb-4">
-                <div>
-                    <label class="block text-xs font-bold mb-1">Distortion Drive (Modulatable)</label>
+            
+            <!-- Filter ADSR -->
+            <div class="border-t border-gray-700 pt-2">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[10px] text-gray-400 uppercase">Filter Env</span>
+                    <div class="w-1/3 flex items-center gap-1">
+                         <label class="text-[9px] font-bold">Amt</label>
+                         <input type="range" id="f-amt" min="0" max="5000" value="2000">
+                    </div>
+                </div>
+                <div class="grid grid-cols-4 gap-1 text-center">
+                    <div class="vertical-range-container">
+                        <input type="range" id="f-atk" min="0.01" max="2" step="0.01" value="0.1" class="vertical-slider">
+                    </div>
+                    <div class="vertical-range-container">
+                        <input type="range" id="f-dec" min="0.01" max="2" step="0.01" value="0.3" class="vertical-slider">
+                    </div>
+                    <div class="vertical-range-container">
+                        <input type="range" id="f-sus" min="0" max="1" step="0.01" value="0.5" class="vertical-slider">
+                    </div>
+                    <div class="vertical-range-container">
+                        <input type="range" id="f-rel" min="0.01" max="3" step="0.01" value="1.0" class="vertical-slider">
+                    </div>
+                    <div class="text-[9px] text-gray-500">A</div>
+                    <div class="text-[9px] text-gray-500">D</div>
+                    <div class="text-[9px] text-gray-500">S</div>
+                    <div class="text-[9px] text-gray-500">R</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Amp Envelope & Oscillator -->
+        <div class="grid grid-cols-2 gap-4">
+            <!-- Amp ADSR (Narrower) -->
+            <div class="control-group">
+                <h3 class="text-xs font-bold text-teal-500 uppercase mb-2">Amp Env</h3>
+                <div class="grid grid-cols-4 gap-1 text-center">
+                    <div class="vertical-range-container">
+                        <input type="range" id="atk" min="0.01" max="2" step="0.01" value="0.05" class="vertical-slider">
+                    </div>
+                    <div class="vertical-range-container">
+                        <input type="range" id="dec" min="0.01" max="2" step="0.01" value="0.2" class="vertical-slider">
+                    </div>
+                    <div class="vertical-range-container">
+                        <input type="range" id="sus" min="0" max="1" step="0.01" value="0.8" class="vertical-slider">
+                    </div>
+                    <div class="vertical-range-container">
+                        <input type="range" id="rel" min="0.01" max="3" step="0.01" value="0.5" class="vertical-slider">
+                    </div>
+                    <div class="text-[9px] text-gray-500">A</div>
+                    <div class="text-[9px] text-gray-500">D</div>
+                    <div class="text-[9px] text-gray-500">S</div>
+                    <div class="text-[9px] text-gray-500">R</div>
+                </div>
+            </div>
+
+            <!-- Oscillator & LFO -->
+            <div class="flex flex-col gap-2">
+                <div class="control-group flex-1">
+                    <h3 class="text-xs font-bold text-teal-500 uppercase mb-2">Oscillator</h3>
+                    <div class="grid grid-cols-2 gap-1 mb-2">
+                        <button class="wave-btn py-2 bg-black hover:bg-gray-900 rounded text-[10px] border border-gray-700" data-type="sine">Sine</button>
+                        <button class="wave-btn py-2 bg-black hover:bg-gray-900 rounded text-[10px] border border-gray-700" data-type="sawtooth">Saw</button>
+                        <button class="wave-btn py-2 bg-black hover:bg-gray-900 rounded text-[10px] border border-gray-700" data-type="square">Sqr</button>
+                        <button class="wave-btn py-2 bg-black hover:bg-gray-900 rounded text-[10px] border border-gray-700" data-type="triangle">Tri</button>
+                    </div>
+                    <div class="text-[9px] text-gray-500 mb-1">Distortion Drive</div>
                     <input type="range" id="dist-drive" min="0" max="100" value="0">
                 </div>
-             </div>
-        </div>
-
-        <!-- Amp Envelope (ADSR) -->
-        <div class="control-group">
-            <h3 class="text-xs font-bold text-teal-500 uppercase mb-2">Amp Envelope</h3>
-            <div class="grid grid-cols-4 gap-2 text-center">
-                <div class="vertical-range-container">
-                    <input type="range" id="atk" min="0.01" max="2" step="0.01" value="0.05" class="h-20 writing-mode-vertical appearance-none" style="-webkit-appearance: slider-vertical;">
-                    <span class="block text-[10px] mt-1">A</span>
-                </div>
-                <div class="vertical-range-container">
-                    <input type="range" id="dec" min="0.01" max="2" step="0.01" value="0.2" class="h-20 writing-mode-vertical" style="-webkit-appearance: slider-vertical;">
-                    <span class="block text-[10px] mt-1">D</span>
-                </div>
-                <div class="vertical-range-container">
-                    <input type="range" id="sus" min="0" max="1" step="0.01" value="0.8" class="h-20 writing-mode-vertical" style="-webkit-appearance: slider-vertical;">
-                    <span class="block text-[10px] mt-1">S</span>
-                </div>
-                <div class="vertical-range-container">
-                    <input type="range" id="rel" min="0.01" max="3" step="0.01" value="0.5" class="h-20 writing-mode-vertical" style="-webkit-appearance: slider-vertical;">
-                    <span class="block text-[10px] mt-1">R</span>
-                </div>
             </div>
         </div>
 
-        <!-- Effects -->
+        <!-- Effects & LFO -->
         <div class="control-group">
-            <h3 class="text-xs font-bold text-teal-500 uppercase mb-3">Effects</h3>
-            <div class="grid grid-cols-3 gap-2">
-                <div>
-                    <label class="block text-[10px] mb-1">Delay Time</label>
-                    <input type="range" id="delay-time" min="0" max="1" step="0.01" value="0.3">
-                </div>
-                <div>
-                    <label class="block text-[10px] mb-1">Delay Mix</label>
-                    <input type="range" id="delay-mix" min="0" max="1" step="0.01" value="0.3">
-                </div>
-                 <div>
-                    <label class="block text-[10px] mb-1">Reverb Mix</label>
-                    <input type="range" id="reverb-mix" min="0" max="1" step="0.01" value="0.3">
-                </div>
-            </div>
-        </div>
-
-        <!-- LFO -->
-        <div class="control-group">
-            <div class="flex justify-between mb-2">
-                <h3 class="text-xs font-bold text-teal-500 uppercase">LFO</h3>
-                <select id="lfo-target" class="bg-gray-800 text-xs border border-gray-600 rounded px-1 w-24">
-                    <option value="pitch">Pitch</option>
-                    <option value="filter">Filter</option>
-                    <option value="none">Off</option>
-                </select>
-            </div>
+            <h3 class="text-xs font-bold text-teal-500 uppercase mb-3">Effects & LFO</h3>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-bold mb-1">Rate</label>
-                    <input type="range" id="lfo-rate" min="0.1" max="20" step="0.1" value="3">
+                    <label class="block text-[10px] mb-1">Delay</label>
+                    <input type="range" id="delay-mix" min="0" max="1" step="0.01" value="0">
+                    <label class="block text-[10px] mt-2 mb-1">Reverb</label>
+                    <input type="range" id="reverb-mix" min="0" max="1" step="0.01" value="0">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold mb-1">Depth</label>
-                    <input type="range" id="lfo-depth" min="0" max="1000" value="100">
+                     <div class="flex justify-between mb-1">
+                        <label class="text-[10px]">LFO Rate</label>
+                        <select id="lfo-target" class="w-16 h-4 text-[9px] p-0 border-gray-700">
+                            <option value="pitch">Pitch</option>
+                            <option value="filter">Filter</option>
+                            <option value="none" selected>Off</option>
+                        </select>
+                    </div>
+                    <input type="range" id="lfo-rate" min="0.1" max="20" step="0.1" value="3.1">
+                    <label class="block text-[10px] mt-2 mb-1">LFO Depth</label>
+                    <input type="range" id="lfo-depth" min="0" max="1000" value="700">
                 </div>
             </div>
+             <input type="range" id="delay-time" min="0" max="1" step="0.01" value="0.3" class="hidden"> <!-- Hidden but functional -->
         </div>
 
     </main>
 
+    <footer class="flex-none p-3 text-center text-[10px] text-gray-500 border-t border-gray-800 bg-black/90 z-10 font-mono tracking-widest uppercase">
+        Created by Jonas Lund 2025
+    </footer>
+
     <script>
+        // --- PARTICLE SYSTEM ---
+        const particleCanvas = document.getElementById('particle-canvas');
+        const pCtx = particleCanvas.getContext('2d');
+        let particles = [];
+        
+        function resizeParticles() {
+            particleCanvas.width = window.innerWidth;
+            particleCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeParticles);
+        resizeParticles();
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                // Random position across the entire screen
+                this.x = Math.random() * particleCanvas.width;
+                this.y = Math.random() * particleCanvas.height;
+                
+                // Random angle and Slower Speed (0.2 - 0.7)
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 0.5 + 0.2; 
+                
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.size = Math.random() * 2 + 0.5;
+                // Vary opacity for twinkling effect
+                this.alpha = Math.random() * 0.5 + 0.2; 
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // Wrap around edges for infinite random flow
+                if(this.x < 0) this.x = particleCanvas.width;
+                if(this.x > particleCanvas.width) this.x = 0;
+                if(this.y < 0) this.y = particleCanvas.height;
+                if(this.y > particleCanvas.height) this.y = 0;
+            }
+            draw() {
+                pCtx.beginPath();
+                pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                pCtx.fillStyle = `rgba(79, 209, 197, ${this.alpha})`;
+                pCtx.fill();
+            }
+        }
+
+        function initParticles() {
+            for(let i=0; i<200; i++) particles.push(new Particle());
+            animateParticles();
+        }
+
+        function animateParticles() {
+            pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+
         // --- AUDIO ENGINE ---
         let audioCtx;
         let oscillator;
@@ -344,7 +464,7 @@
         let filterNode;
         let lfo;
         let lfoGain;
-        let distNode; // Distortion wave shaper
+        let distNode; 
         let analyser;
         
         let delayNode, delayFeedback, delayDry, delayWet;
@@ -356,9 +476,16 @@
 
         // --- GLOBAL INPUT STATE (Normalized 0-1) ---
         let state = {
-            mainInput: 0, // Camera or Tilt
+            cameraInput: 0,
+            tiltInput: 0,
             touchX: 0.5,
             touchY: 0.5
+        };
+        
+        // Input Config Flags - Enabled by default
+        let config = {
+            useCamera: true,
+            useTilt: true
         };
 
         // --- DOM ELEMENTS ---
@@ -369,15 +496,19 @@
         const powerBtn = document.getElementById('power-btn');
         const holdBtn = document.getElementById('hold-btn');
         const touchPad = document.getElementById('touch-pad');
-        const inputValDisplay = document.getElementById('input-val');
-        const feedbackOverlay = document.getElementById('sensor-feedback');
-        const statusIndicator = document.getElementById('status-indicator');
-        const btnCamMode = document.getElementById('btn-cam-mode');
-        const btnTiltMode = document.getElementById('btn-tilt-mode');
+        const camValDisplay = document.getElementById('cam-val-display');
+        const tiltValDisplay = document.getElementById('tilt-val-display');
+        
+        // Toggles
+        const btnToggleCam = document.getElementById('btn-toggle-cam');
+        const btnToggleTilt = document.getElementById('btn-toggle-tilt');
+        const camControlsDiv = document.getElementById('cam-controls');
+        const tiltControlsDiv = document.getElementById('tilt-controls');
         const sensorPermBtn = document.getElementById('sensor-perm-btn');
         
         // Mappings
-        const mapInput = document.getElementById('map-input');
+        const mapCamera = document.getElementById('map-camera');
+        const mapTilt = document.getElementById('map-tilt');
         const mapTouchX = document.getElementById('map-touch-x');
         const mapTouchY = document.getElementById('map-touch-y');
 
@@ -387,12 +518,9 @@
         const lblYLow = document.getElementById('label-y-low');
         const lblYHigh = document.getElementById('label-y-high');
 
-        // --- STATE VARS ---
         let animationId;
-        let inputMode = 'camera'; 
         let baseLightLevel = 128;
         
-        // --- HELPER: Distortion Curve ---
         function makeDistortionCurve(amount) {
             let k = typeof amount === 'number' ? amount : 50;
             let n_samples = 44100;
@@ -405,7 +533,6 @@
             return curve;
         }
 
-        // --- HELPER: Reverb Impulse ---
         function createReverbImpulse(duration) {
             const sampleRate = audioCtx.sampleRate;
             const length = sampleRate * duration;
@@ -420,13 +547,11 @@
             return impulse;
         }
 
-        // --- AUDIO SETUP ---
         function initAudio() {
             if (audioCtx) return;
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             audioCtx = new AudioContext();
 
-            // Nodes
             oscillator = audioCtx.createOscillator();
             lfo = audioCtx.createOscillator();
             lfoGain = audioCtx.createGain(); 
@@ -444,7 +569,6 @@
             reverbDry = audioCtx.createGain();
             reverbWet = audioCtx.createGain();
             
-            // Defaults
             oscillator.type = 'sine';
             gainNode.gain.value = 0; 
             masterGainNode.gain.value = parseFloat(document.getElementById('master-vol').value);
@@ -459,13 +583,11 @@
 
             reverbNode.buffer = createReverbImpulse(2.0);
 
-            // Connections
             lfo.connect(lfoGain);
             oscillator.connect(distNode);
-            distNode.connect(filterNode); // Distort before filter for grit
+            distNode.connect(filterNode); 
             filterNode.connect(gainNode);
 
-            // Effects Chain
             gainNode.connect(delayDry);
             gainNode.connect(delayNode);
             delayNode.connect(delayFeedback);
@@ -493,96 +615,92 @@
             updateBaseParams();
         }
 
-        // Updates non-modulated controls
         function updateBaseParams() {
             if(!audioCtx) return;
             masterGainNode.gain.setTargetAtTime(parseFloat(document.getElementById('master-vol').value), audioCtx.currentTime, 0.05);
             
-            // Delay/Reverb/LFO Type (Modulatable params are handled in applyModulations)
             const dTime = parseFloat(document.getElementById('delay-time').value);
             const dMix = parseFloat(document.getElementById('delay-mix').value);
+            
+            // Reverb Mix (Set base value, modulation can override)
             const rMix = parseFloat(document.getElementById('reverb-mix').value);
             
             delayNode.delayTime.setTargetAtTime(dTime, audioCtx.currentTime, 0.1);
             delayDry.gain.setTargetAtTime(1 - dMix, audioCtx.currentTime, 0.1);
             delayWet.gain.setTargetAtTime(dMix, audioCtx.currentTime, 0.1);
-            reverbDry.gain.setTargetAtTime(1 - rMix, audioCtx.currentTime, 0.1);
-            reverbWet.gain.setTargetAtTime(rMix, audioCtx.currentTime, 0.1);
+            
+            // Reverb values will be set in applyModulations if mapped, else here.
+            // But we can set a baseline target here, and applyModulations will override if active.
+            // For simplicity, we only update here if no modulation is affecting reverb.
+            const mapsToReverb = [mapCamera.value, mapTilt.value, mapTouchX.value, mapTouchY.value].includes('reverbMix');
+            if(!mapsToReverb) {
+                reverbDry.gain.setTargetAtTime(1 - rMix, audioCtx.currentTime, 0.1);
+                reverbWet.gain.setTargetAtTime(rMix, audioCtx.currentTime, 0.1);
+            }
 
-            // Hard LFO routing (traditional)
             const target = document.getElementById('lfo-target').value;
             try { lfoGain.disconnect(); } catch(e){}
             if (target === 'pitch') lfoGain.connect(oscillator.frequency);
             else if (target === 'filter') lfoGain.connect(filterNode.frequency);
         }
 
-        // --- CORE MODULATION LOGIC ---
+        // --- MODULATION & CORE LOGIC ---
         function applyModulations() {
             if (!audioCtx) return;
 
-            // 1. Determine active mappings
-            const map1 = mapInput.value;
-            const map2 = mapTouchX.value;
-            const map3 = mapTouchY.value;
+            // Mappings
+            const mapC = mapCamera.value;
+            const mapT = mapTilt.value;
+            const mapX = mapTouchX.value;
+            const mapY = mapTouchY.value;
 
-            // 2. Initialize accumulators for all possible targets
-            // Each accumulator stores the sum of normalized (0-1) inputs targeting it
-            // count tracks how many sources target it, to average them (prevent clipping)
+            // Targets Accumulators
             let targets = {
                 pitch: { sum: 0, count: 0 },
                 filter: { sum: 0, count: 0 },
                 lfoRate: { sum: 0, count: 0 },
                 lfoDepth: { sum: 0, count: 0 },
                 resonance: { sum: 0, count: 0 },
-                distortion: { sum: 0, count: 0 }
+                distortion: { sum: 0, count: 0 },
+                reverbMix: { sum: 0, count: 0 }
             };
 
-            // 3. Add values
-            if (map1 !== 'none') { targets[map1].sum += state.mainInput; targets[map1].count++; }
-            if (map2 !== 'none') { targets[map2].sum += state.touchX;    targets[map2].count++; }
-            if (map3 !== 'none') { targets[map3].sum += state.touchY;    targets[map3].count++; }
+            // Add Sources (If enabled)
+            if (config.useCamera && mapC !== 'none') { targets[mapC].sum += state.cameraInput; targets[mapC].count++; }
+            if (config.useTilt && mapT !== 'none') { targets[mapT].sum += state.tiltInput; targets[mapT].count++; }
+            if (mapX !== 'none') { targets[mapX].sum += state.touchX; targets[mapX].count++; }
+            if (mapY !== 'none') { targets[mapY].sum += state.touchY; targets[mapY].count++; }
 
-            // 4. Resolve final values (Average)
+            // Average
             let finalValues = {};
             for (let key in targets) {
                 if (targets[key].count > 0) {
                     finalValues[key] = targets[key].sum / targets[key].count;
                 } else {
-                    finalValues[key] = null; // No modulation active
+                    finalValues[key] = null; 
                 }
             }
 
             const now = audioCtx.currentTime;
             const rampTime = 0.05;
 
-            // 5. Apply to Audio Params
-
             // --- PITCH ---
             if (finalValues.pitch !== null) {
-                // Map 0-1 to 100Hz-1000Hz (Exp)
                 const freq = 100 + Math.pow(finalValues.pitch, 2) * 900; 
-                // We use pow(2) for better musical feel
                 oscillator.frequency.setTargetAtTime(freq, now, rampTime);
             }
 
             // --- FILTER ---
             if (finalValues.filter !== null) {
-                const baseCutoff = parseFloat(document.getElementById('filter-cutoff').value);
-                // Modulate relative to base? Or absolute?
-                // Let's do absolute override for "X-Y pad" feel, but allow base to be min.
-                // Map 0-1 to 50-5000Hz
                 const freq = 50 + Math.pow(finalValues.filter, 2) * 5000;
                 filterNode.frequency.setTargetAtTime(freq, now, rampTime);
-            } else {
-                // Return to slider value
-                filterNode.frequency.setTargetAtTime(parseFloat(document.getElementById('filter-cutoff').value), now, rampTime);
             }
 
             // --- LFO RATE ---
             if (finalValues.lfoRate !== null) {
                 const rate = 0.1 + (finalValues.lfoRate * 20);
                 lfo.frequency.setTargetAtTime(rate, now, rampTime);
-                document.getElementById('lfo-rate').value = rate; // Visual feedback
+                document.getElementById('lfo-rate').value = rate; 
             } else {
                 lfo.frequency.setTargetAtTime(parseFloat(document.getElementById('lfo-rate').value), now, rampTime);
             }
@@ -610,59 +728,29 @@
                 const drive = finalValues.distortion * 100;
                 distNode.curve = makeDistortionCurve(drive);
                 document.getElementById('dist-drive').value = drive;
+            }
+            
+            // --- REVERB MIX ---
+            if (finalValues.reverbMix !== null) {
+                const rMix = finalValues.reverbMix;
+                reverbDry.gain.setTargetAtTime(1 - rMix, now, rampTime);
+                reverbWet.gain.setTargetAtTime(rMix, now, rampTime);
+                document.getElementById('reverb-mix').value = rMix;
             } else {
-                // Only update if changed significantly to save CPU calc
-                const drive = parseFloat(document.getElementById('dist-drive').value);
-                // We don't recalc curve every frame for static slider, only if mod is active
-                // But for simplicity, we assume static slider is set on 'input' event
+                // If not modulated, allow slider update (handled in updateBaseParams)
             }
         }
         
-        // Handle Slider change for Distortion
         document.getElementById('dist-drive').addEventListener('input', (e) => {
              if (audioCtx) distNode.curve = makeDistortionCurve(parseFloat(e.target.value));
         });
-
-
-        // --- UI LABEL UPDATER ---
-        function updatePadLabels() {
-            const mapX = mapTouchX.value;
-            const mapY = mapTouchY.value;
-
-            const labels = {
-                'pitch': ['Low Pitch', 'High Pitch'],
-                'filter': ['Dark', 'Bright'],
-                'lfoRate': ['Slow', 'Fast'],
-                'lfoDepth': ['Flat', 'Wobbly'],
-                'resonance': ['Soft', 'Sharp'],
-                'distortion': ['Clean', 'Crunchy'],
-                'none': ['', '']
-            };
-
-            lblXLow.innerText = labels[mapX][0];
-            lblXHigh.innerText = labels[mapX][1];
-            
-            // Y is usually inverted visually (bottom=low) but HTML coords top=0
-            // My calculation: 1 - y/height. So top is 1 (High), bottom is 0 (Low).
-            lblYHigh.innerText = labels[mapY][1]; 
-            lblYLow.innerText = labels[mapY][0];
-        }
-
-        [mapInput, mapTouchX, mapTouchY].forEach(el => el.addEventListener('change', () => {
-            updatePadLabels();
-            // Recalc audio immediately
-            applyModulations();
-        }));
-        
-        // Init labels
-        updatePadLabels();
-
 
         // --- ENVELOPES ---
         function triggerAttack() {
             if (!audioCtx) return;
             const now = audioCtx.currentTime;
             
+            // Amp
             const atk = parseFloat(document.getElementById('atk').value);
             const dec = parseFloat(document.getElementById('dec').value);
             const sus = parseFloat(document.getElementById('sus').value);
@@ -671,23 +759,79 @@
             gainNode.gain.setTargetAtTime(ENVELOPE_PEAK, now, atk / 3);
             gainNode.gain.setTargetAtTime(ENVELOPE_PEAK * sus, now + atk, dec / 3);
             
-            // Note: Filter Envelope is disabled in this Modular version 
-            // to allow full manual control via the Matrix without conflict.
+            // Filter (Only if not being modulated manually)
+            const mapsToFilter = [mapCamera.value, mapTilt.value, mapTouchX.value, mapTouchY.value].includes('filter');
+            
+            if (!mapsToFilter) {
+                const fAtk = parseFloat(document.getElementById('f-atk').value);
+                const fDec = parseFloat(document.getElementById('f-dec').value);
+                const fSus = parseFloat(document.getElementById('f-sus').value);
+                const fAmt = parseFloat(document.getElementById('f-amt').value);
+                const baseCutoff = parseFloat(document.getElementById('filter-cutoff').value);
+
+                filterNode.frequency.cancelScheduledValues(now);
+                
+                const peakFreq = baseCutoff + fAmt;
+                const susFreq = baseCutoff + (fAmt * fSus);
+                
+                const clampedPeak = peakFreq > 22000 ? 22000 : peakFreq;
+                const clampedSus = susFreq > 22000 ? 22000 : susFreq;
+
+                filterNode.frequency.setTargetAtTime(clampedPeak, now, fAtk / 3);
+                filterNode.frequency.setTargetAtTime(clampedSus, now + fAtk, fDec / 3);
+            }
         }
 
         function triggerRelease() {
             if (!audioCtx) return;
             const now = audioCtx.currentTime;
+            
             const rel = parseFloat(document.getElementById('rel').value);
             gainNode.gain.cancelScheduledValues(now);
             gainNode.gain.setTargetAtTime(0, now, rel / 5); 
+
+            // Filter Release
+            const mapsToFilter = [mapCamera.value, mapTilt.value, mapTouchX.value, mapTouchY.value].includes('filter');
+            if(!mapsToFilter) {
+                const fRel = parseFloat(document.getElementById('f-rel').value);
+                const baseCutoff = parseFloat(document.getElementById('filter-cutoff').value);
+                filterNode.frequency.cancelScheduledValues(now);
+                filterNode.frequency.setTargetAtTime(baseCutoff, now, fRel / 3);
+            }
         }
 
-        // --- INPUT PROCESSING ---
+        // --- INPUT HANDLING ---
 
-        // 1. Gyro
+        // Config Toggles
+        function toggleInputConfig(type) {
+            if(type === 'camera') {
+                config.useCamera = !config.useCamera;
+                btnToggleCam.classList.toggle('active');
+                
+                if(config.useCamera && isPlaying) startCamera();
+                else stopCamera();
+            }
+            if(type === 'tilt') {
+                config.useTilt = !config.useTilt;
+                btnToggleTilt.classList.toggle('active');
+                
+                if(config.useTilt && isPlaying) {
+                    window.addEventListener('deviceorientation', handleOrientation);
+                    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                        sensorPermBtn.classList.remove('hidden');
+                    }
+                } else {
+                    window.removeEventListener('deviceorientation', handleOrientation);
+                }
+            }
+        }
+        
+        btnToggleCam.onclick = () => toggleInputConfig('camera');
+        btnToggleTilt.onclick = () => toggleInputConfig('tilt');
+
+        // 1. Gyro Logic
         function handleOrientation(event) {
-            if (inputMode !== 'tilt' || !isPlaying) return;
+            if (!config.useTilt || !isPlaying) return;
             
             let pitch = event.beta; 
             if (pitch === null) return;
@@ -698,23 +842,24 @@
             let normalized = pitch / 80;
             normalized = Math.pow(normalized, 1/sensitivity);
 
-            // UPDATE GLOBAL STATE
-            state.mainInput = normalized;
-            
-            inputValDisplay.innerText = Math.round(normalized * 100);
+            state.tiltInput = normalized;
+            tiltValDisplay.innerText = `TILT: ${Math.round(normalized*100)}%`;
             applyModulations();
         }
 
-        // 2. Camera
+        // 2. Camera Logic
         async function startCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: 320, height: 240 } });
                 video.srcObject = stream;
                 video.play();
                 video.classList.remove('hidden');
+                camValDisplay.classList.remove('hidden');
             } catch (err) {
-                alert("Camera error: " + err.message);
-                switchInputMode('tilt');
+                // If camera fails, fail gracefully but keep app running
+                console.error(err);
+                camValDisplay.innerText = "CAM ERR";
+                camValDisplay.classList.remove('hidden');
             }
         }
         function stopCamera() {
@@ -722,6 +867,7 @@
             video.srcObject.getTracks().forEach(t => t.stop());
             video.srcObject = null;
             video.classList.add('hidden');
+            camValDisplay.classList.add('hidden');
         }
 
         const processingCanvas = document.createElement('canvas');
@@ -746,33 +892,27 @@
             let normalized = (1 - (avg / baseLightLevel)) * sens;
             if(normalized > 1) normalized = 1; if(normalized<0) normalized=0;
 
-            // UPDATE GLOBAL STATE
-            state.mainInput = normalized;
-            
-            inputValDisplay.innerText = Math.round(normalized * 100);
+            state.cameraInput = normalized;
+            camValDisplay.innerText = `CAM: ${Math.round(normalized*100)}%`;
             applyModulations();
         }
 
-        // 3. Touch
+        // 3. Touch Logic
         function handleTouch(x, y, width, height) {
             if (!audioCtx) return;
             const xPercent = x / width;
             const yPercent = 1 - (y / height); // Invert Y so top is 1
 
-            // UPDATE GLOBAL STATE
             state.touchX = xPercent;
             state.touchY = yPercent;
-
             applyModulations();
         }
 
-
         // --- LOOPS & EVENTS ---
-        
         function loop() {
             animationId = requestAnimationFrame(loop);
             drawVisualizer();
-            if (inputMode === 'camera' && video.readyState === video.HAVE_ENOUGH_DATA && isPlaying) {
+            if (config.useCamera && video.readyState === video.HAVE_ENOUGH_DATA && isPlaying) {
                 processCameraFrame();
             }
         }
@@ -798,29 +938,32 @@
 
         // --- UI BINDINGS ---
         
-        function switchInputMode(mode) {
-            inputMode = mode;
-            if (mode === 'camera') {
-                btnCamMode.classList.add('active'); btnTiltMode.classList.remove('active');
-                document.getElementById('camera-controls').classList.remove('hidden');
-                document.getElementById('tilt-controls').classList.add('hidden');
-                window.removeEventListener('deviceorientation', handleOrientation);
-                if(isPlaying) startCamera();
-            } else {
-                btnTiltMode.classList.add('active'); btnCamMode.classList.remove('active');
-                document.getElementById('tilt-controls').classList.remove('hidden');
-                document.getElementById('camera-controls').classList.add('hidden');
-                stopCamera();
-                if(isPlaying) {
-                    window.addEventListener('deviceorientation', handleOrientation);
-                    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                        sensorPermBtn.classList.remove('hidden');
-                    }
-                }
-            }
+        function updatePadLabels() {
+            const mapX = mapTouchX.value;
+            const mapY = mapTouchY.value;
+
+            const labels = {
+                'pitch': ['Low Pitch', 'High Pitch'],
+                'filter': ['Dark', 'Bright'],
+                'lfoRate': ['Slow', 'Fast'],
+                'lfoDepth': ['Flat', 'Wobbly'],
+                'resonance': ['Soft', 'Sharp'],
+                'distortion': ['Clean', 'Crunchy'],
+                'reverbMix': ['Dry', 'Wet'],
+                'none': ['', '']
+            };
+
+            lblXLow.innerText = labels[mapX][0];
+            lblXHigh.innerText = labels[mapX][1];
+            lblYHigh.innerText = labels[mapY][1]; 
+            lblYLow.innerText = labels[mapY][0];
         }
-        btnCamMode.onclick = () => switchInputMode('camera');
-        btnTiltMode.onclick = () => switchInputMode('tilt');
+
+        [mapCamera, mapTilt, mapTouchX, mapTouchY].forEach(el => el.addEventListener('change', () => {
+            updatePadLabels();
+            applyModulations();
+        }));
+        updatePadLabels();
 
         // Touch Listeners
         let isTouching = false;
@@ -828,7 +971,6 @@
             e.preventDefault(); if(!isPlaying) return;
             isTouching = true; if(!isHoldActive) triggerAttack();
             const r = touchPad.getBoundingClientRect();
-            // Handle multi-touch or mouse
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             handleTouch(clientX - r.left, clientY - r.top, r.width, r.height);
@@ -857,18 +999,25 @@
         powerBtn.onclick = () => {
             if (!isPlaying) {
                 initAudio(); audioCtx.resume(); isPlaying = true;
-                feedbackOverlay.classList.remove('hidden');
-                statusIndicator.classList.remove('hidden');
-                if(inputMode==='camera') startCamera(); 
-                else window.addEventListener('deviceorientation', handleOrientation);
+                document.getElementById('status-indicator').classList.remove('hidden');
+                
+                // Initialize active configs
+                if(config.useCamera) startCamera(); 
+                if(config.useTilt) {
+                    window.addEventListener('deviceorientation', handleOrientation);
+                    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                        sensorPermBtn.classList.remove('hidden');
+                    }
+                    tiltValDisplay.classList.remove('hidden');
+                }
+
                 powerBtn.innerText = "STOP SYSTEM";
                 powerBtn.classList.replace('bg-red-500','bg-green-500');
                 loop();
             } else {
                 isPlaying = false; triggerRelease(); stopCamera();
                 window.removeEventListener('deviceorientation', handleOrientation);
-                feedbackOverlay.classList.add('hidden');
-                statusIndicator.classList.add('hidden');
+                document.getElementById('status-indicator').classList.add('hidden');
                 powerBtn.innerText = "START SYSTEM";
                 powerBtn.classList.replace('bg-green-500','bg-red-500');
                 cancelAnimationFrame(animationId);
@@ -894,7 +1043,7 @@
 
         // Calibrate
         document.getElementById('calibrate-btn').onclick = () => {
-             if(inputMode === 'camera' && isPlaying) {
+             if(config.useCamera && isPlaying) {
                  baseLightLevel = 255; 
              }
         };
