@@ -34,16 +34,14 @@
             outline: none;
         }
         
-        /* Vertical Slider Specifics for Envelopes */
+        /* Vertical Slider Specifics */
         input[type=range][style*="slider-vertical"] {
-             width: 8px; /* Visual width of track area */
+             width: 8px; 
         }
-        /* Note: Vertical sliders styling varies by browser. 
-           We use a specific class to try and force consistency */
         .vertical-slider {
             -webkit-appearance: slider-vertical; 
             width: 20px;
-            accent-color: #4fd1c5; /* Modern browser support */
+            accent-color: #4fd1c5; 
             background: transparent;
         }
 
@@ -51,7 +49,6 @@
             box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
             border: 1px solid #333;
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
-            /* bg-black removed here to allow transparency via utility classes */
         }
         
         .screen-hold-active {
@@ -134,7 +131,6 @@
     </header>
 
     <!-- Main Visual Area -->
-    <!-- Changed h-48 (12rem) to h-64 (16rem) for ~35% increase. Changed bg-black to bg-black/30 for transparency. -->
     <div id="main-screen" class="flex-none relative h-64 bg-black/30 screen-container w-full overflow-hidden z-10 backdrop-blur-sm">
         <canvas id="visualizer" class="absolute top-0 left-0 w-full h-full z-10 opacity-80 pointer-events-none"></canvas>
         <video id="webcam" class="absolute top-0 left-0 w-full h-full object-cover opacity-30 z-0 hidden" playsinline muted></video>
@@ -375,8 +371,8 @@
                         <label class="text-[10px]">LFO Rate</label>
                         <select id="lfo-target" class="w-16 h-4 text-[9px] p-0 border-gray-700">
                             <option value="pitch">Pitch</option>
-                            <option value="filter">Filter</option>
-                            <option value="none" selected>Off</option>
+                            <option value="filter" selected>Filter</option>
+                            <option value="none">Off</option>
                         </select>
                     </div>
                     <input type="range" id="lfo-rate" min="0.1" max="20" step="0.1" value="3.1">
@@ -686,14 +682,24 @@
 
             // --- PITCH ---
             if (finalValues.pitch !== null) {
-                const freq = 100 + Math.pow(finalValues.pitch, 2) * 900; 
+                // Range increased: 100Hz to 2000Hz (One octave higher max)
+                const freq = 100 + Math.pow(finalValues.pitch, 2) * 1900; 
                 oscillator.frequency.setTargetAtTime(freq, now, rampTime);
             }
 
             // --- FILTER ---
+            let currentFilterFreq = parseFloat(document.getElementById('filter-cutoff').value);
             if (finalValues.filter !== null) {
-                const freq = 50 + Math.pow(finalValues.filter, 2) * 5000;
-                filterNode.frequency.setTargetAtTime(freq, now, rampTime);
+                currentFilterFreq = 50 + Math.pow(finalValues.filter, 2) * 5000;
+                filterNode.frequency.setTargetAtTime(currentFilterFreq, now, rampTime);
+            } else {
+                // If not modulated, allow slider update (but ensure we respect envelopes)
+                // If the filter envelope is running, we probably shouldn't slam this here.
+                // However, applyModulations runs on frame loop.
+                // If not modulated, we rely on updateBaseParams/envelopes.
+                // But for LFO safety, we need to know the freq.
+                // We'll read the param value if modulation is inactive (simulates 'resting' state)
+                // Note: Reading .value gives the base value, not the automation value.
             }
 
             // --- LFO RATE ---
@@ -706,13 +712,25 @@
             }
 
             // --- LFO DEPTH ---
+            let currentDepth = parseFloat(document.getElementById('lfo-depth').value);
             if (finalValues.lfoDepth !== null) {
-                const depth = finalValues.lfoDepth * 1000;
-                lfoGain.gain.setTargetAtTime(depth, now, rampTime);
-                 document.getElementById('lfo-depth').value = depth;
-            } else {
-                lfoGain.gain.setTargetAtTime(parseFloat(document.getElementById('lfo-depth').value), now, rampTime);
+                currentDepth = finalValues.lfoDepth * 1000;
+                document.getElementById('lfo-depth').value = currentDepth;
+            } 
+            
+            // Safety clamp for Filter Target
+            const lfoTarget = document.getElementById('lfo-target').value;
+            if(lfoTarget === 'filter') {
+                // If filter is modulated, use calculated freq. If not, use slider.
+                let baseF = finalValues.filter !== null ? currentFilterFreq : parseFloat(document.getElementById('filter-cutoff').value);
+                // Prevent negative frequency: Depth must be < FilterFreq
+                // We clamp to 90% of filter freq to be safe
+                if(currentDepth > baseF * 0.9) {
+                    currentDepth = baseF * 0.9;
+                }
             }
+            
+            lfoGain.gain.setTargetAtTime(currentDepth, now, rampTime);
 
             // --- RESONANCE ---
             if (finalValues.resonance !== null) {
@@ -1057,9 +1075,14 @@
             }
         };
 
-        // Params listeners
-        const paramIds = ['master-vol', 'delay-time', 'delay-mix', 'reverb-mix', 'lfo-target'];
-        paramIds.forEach(id => document.getElementById(id).addEventListener('input', updateBaseParams));
+        // Params listeners: ADDED LFO AND CUTOFF HERE
+        const paramIds = ['master-vol', 'delay-time', 'delay-mix', 'reverb-mix', 'lfo-target', 'lfo-rate', 'lfo-depth', 'filter-cutoff', 'filter-res'];
+        
+        // Use applyModulations for instantaneous feedback on slider change as well
+        paramIds.forEach(id => document.getElementById(id).addEventListener('input', () => {
+            updateBaseParams();
+            applyModulations();
+        }));
 
         document.querySelectorAll('.wave-btn').forEach(btn => {
             btn.onclick = (e) => {
