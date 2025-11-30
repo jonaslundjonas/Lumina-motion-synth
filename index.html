@@ -420,8 +420,8 @@
                         <label class="text-[10px]">LFO Rate</label>
                         <select id="lfo-target" class="w-16 h-4 text-[9px] p-0 border-gray-700">
                             <option value="pitch">Pitch</option>
-                            <option value="filter">Filter</option>
-                            <option value="none" selected>Off</option>
+                            <option value="filter" selected>Filter</option>
+                            <option value="none">Off</option>
                         </select>
                     </div>
                     <input type="range" id="lfo-rate" min="0.1" max="20" step="0.1" value="3.1">
@@ -735,21 +735,20 @@
 
             // Targets Accumulators
             let targets = {
-                pitch: { sum: 0, count: 0 },
-                filter: { sum: 0, count: 0 },
-                lfoRate: { sum: 0, count: 0 },
-                lfoDepth: { sum: 0, count: 0 },
-                resonance: { sum: 0, count: 0 },
-                distortion: { sum: 0, count: 0 },
-                reverbMix: { sum: 0, count: 0 },
-                delayMix: { sum: 0, count: 0 }
+                pitch: { sum: 0 },
+                filter: { sum: 0 },
+                lfoRate: { sum: 0 },
+                lfoDepth: { sum: 0 },
+                resonance: { sum: 0 },
+                distortion: { sum: 0 },
+                reverbMix: { sum: 0 },
+                delayMix: { sum: 0 }
             };
 
             // Helper to add contributions
             const addMod = (mapping, value) => {
                 if (mapping !== 'none') {
                     targets[mapping].sum += value;
-                    targets[mapping].count++;
                 }
             };
 
@@ -768,11 +767,20 @@
             addMod(mapTouchY1.value, state.touchY);
             addMod(mapTouchY2.value, state.touchY);
 
-            // Average
+            // Sum and Clamp
             let finalValues = {};
             for (let key in targets) {
-                if (targets[key].count > 0) {
-                    finalValues[key] = targets[key].sum / targets[key].count;
+                // If sum is 0, it means either no mapping or inputs are 0.
+                // We need to differentiate "No mapping assigned" from "Input is 0"
+                // Check if any map is assigned to this key
+                let assigned = false;
+                const check = (m) => m.value === key;
+                if(config.useCamera && (check(mapCamera1) || check(mapCamera2))) assigned = true;
+                if(config.useTilt && (check(mapTilt1) || check(mapTilt2))) assigned = true;
+                if(check(mapTouchX1) || check(mapTouchX2) || check(mapTouchY1) || check(mapTouchY2)) assigned = true;
+                
+                if (assigned) {
+                    finalValues[key] = Math.min(targets[key].sum, 1.0); // Clamp to 1.0 max
                 } else {
                     finalValues[key] = null; 
                 }
@@ -785,7 +793,9 @@
             if (finalValues.pitch !== null) {
                 // Range increased: 100Hz to 2000Hz (One octave higher max)
                 const freq = 100 + Math.pow(finalValues.pitch, 2) * 1900; 
-                oscillator.frequency.setTargetAtTime(freq, now, rampTime);
+                // Pitch needs strict lower bound clamping to prevent crash
+                const safeFreq = Math.max(20, freq);
+                oscillator.frequency.setTargetAtTime(safeFreq, now, rampTime);
             }
 
             // --- FILTER ---
@@ -805,7 +815,7 @@
             if (finalValues.lfoRate !== null) {
                 const rate = 0.1 + (finalValues.lfoRate * 20);
                 lfo.frequency.setTargetAtTime(rate, now, rampTime);
-                document.getElementById('lfo-rate').value = rate; 
+                // No DOM write to avoid instability
             } else {
                 lfo.frequency.setTargetAtTime(parseFloat(document.getElementById('lfo-rate').value), now, rampTime);
             }
@@ -814,7 +824,7 @@
             let currentDepth = parseFloat(document.getElementById('lfo-depth').value);
             if (finalValues.lfoDepth !== null) {
                 currentDepth = finalValues.lfoDepth * 1000;
-                document.getElementById('lfo-depth').value = currentDepth;
+                // No DOM write
             } 
             
             // Safety clamp for Filter Target LFO
@@ -833,17 +843,14 @@
             if (finalValues.resonance !== null) {
                 const res = finalValues.resonance * 20;
                 filterNode.Q.setTargetAtTime(res, now, rampTime);
-                document.getElementById('filter-res').value = res;
             } else {
                 filterNode.Q.setTargetAtTime(parseFloat(document.getElementById('filter-res').value), now, rampTime);
             }
 
             // --- DISTORTION ---
             if (finalValues.distortion !== null) {
-                const driveMod = finalValues.distortion * 100; // 0-100 visual
                 const gain = 1 + (finalValues.distortion * 20); // 1-21x
                 distGain.gain.setTargetAtTime(gain, now, rampTime);
-                document.getElementById('dist-drive').value = driveMod;
             }
             
             // --- REVERB MIX ---
@@ -851,7 +858,6 @@
                 const rMix = finalValues.reverbMix;
                 reverbDry.gain.setTargetAtTime(1 - rMix, now, rampTime);
                 reverbWet.gain.setTargetAtTime(rMix, now, rampTime);
-                document.getElementById('reverb-mix').value = rMix;
             } else {
                 // If not modulated, allow slider update (handled in updateBaseParams)
             }
@@ -861,16 +867,13 @@
                 const dMix = finalValues.delayMix;
                 delayDry.gain.setTargetAtTime(1 - dMix, now, rampTime);
                 delayWet.gain.setTargetAtTime(dMix, now, rampTime);
-                document.getElementById('delay-mix').value = dMix;
             } else {
                 // If not modulated, allow slider update (handled in updateBaseParams)
             }
         }
         
-        document.getElementById('dist-drive').addEventListener('input', (e) => {
-             if (audioCtx) distNode.curve = makeDistortionCurve(parseFloat(e.target.value));
-        });
-
+        // Note: Removed DOM writes inside modulation loop to prevent UI stutter/clicks
+        
         // --- ENVELOPES ---
         function triggerAttack() {
             if (!audioCtx) return;
