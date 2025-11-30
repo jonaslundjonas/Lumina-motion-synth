@@ -109,6 +109,7 @@
             padding: 0.25rem;
             font-size: 0.7rem;
             width: 100%;
+            margin-bottom: 2px;
         }
     </style>
 </head>
@@ -206,13 +207,13 @@
         <!-- MODULATION MATRIX -->
         <div class="control-group border border-teal-900/50 shadow-[0_0_15px_rgba(20,184,166,0.05)]">
             <h3 class="text-xs font-bold text-teal-500 uppercase mb-3 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_5px_#4fd1c5]"></span> Modulation Matrix
+                <span class="w-2 h-2 rounded-full bg-teal-500 shadow-[0_0_5px_#4fd1c5]"></span> Dual Modulation Matrix
             </h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <!-- Camera -->
                 <div>
-                    <label class="block text-[10px] font-bold text-teal-400 mb-1">Camera →</label>
-                    <select id="map-camera" class="focus:border-teal-500 focus:outline-none">
+                    <label class="block text-[10px] font-bold text-teal-400 mb-1">Camera Inputs</label>
+                    <select id="map-camera-1" class="focus:border-teal-500 focus:outline-none">
                         <option value="pitch">Pitch</option>
                         <option value="filter">Filter</option>
                         <option value="lfoRate">LFO Rate</option>
@@ -220,14 +221,26 @@
                         <option value="resonance">Resonance</option>
                         <option value="distortion">Distortion</option>
                         <option value="reverbMix" selected>Reverb Mix</option>
+                        <option value="delayMix">Delay Mix</option>
                         <option value="none">None</option>
+                    </select>
+                    <select id="map-camera-2" class="focus:border-teal-500 focus:outline-none">
+                        <option value="pitch">Pitch</option>
+                        <option value="filter">Filter</option>
+                        <option value="lfoRate">LFO Rate</option>
+                        <option value="lfoDepth">LFO Depth</option>
+                        <option value="resonance">Resonance</option>
+                        <option value="distortion">Distortion</option>
+                        <option value="reverbMix">Reverb Mix</option>
+                        <option value="delayMix">Delay Mix</option>
+                        <option value="none" selected>None</option>
                     </select>
                 </div>
 
                 <!-- Tilt -->
                 <div>
-                    <label class="block text-[10px] font-bold text-purple-400 mb-1">Tilt →</label>
-                    <select id="map-tilt" class="focus:border-teal-500 focus:outline-none">
+                    <label class="block text-[10px] font-bold text-purple-400 mb-1">Tilt Inputs</label>
+                    <select id="map-tilt-1" class="focus:border-teal-500 focus:outline-none">
                         <option value="pitch" selected>Pitch</option>
                         <option value="filter">Filter</option>
                         <option value="lfoRate">LFO Rate</option>
@@ -235,14 +248,26 @@
                         <option value="resonance">Resonance</option>
                         <option value="distortion">Distortion</option>
                         <option value="reverbMix">Reverb Mix</option>
+                        <option value="delayMix">Delay Mix</option>
                         <option value="none">None</option>
+                    </select>
+                    <select id="map-tilt-2" class="focus:border-teal-500 focus:outline-none">
+                        <option value="pitch">Pitch</option>
+                        <option value="filter">Filter</option>
+                        <option value="lfoRate">LFO Rate</option>
+                        <option value="lfoDepth">LFO Depth</option>
+                        <option value="resonance">Resonance</option>
+                        <option value="distortion">Distortion</option>
+                        <option value="reverbMix">Reverb Mix</option>
+                        <option value="delayMix">Delay Mix</option>
+                        <option value="none" selected>None</option>
                     </select>
                 </div>
 
                 <!-- Touch X -->
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 mb-1">Touch X →</label>
-                    <select id="map-touch-x" class="focus:border-teal-500 focus:outline-none">
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1">Touch X Inputs</label>
+                    <select id="map-touch-x-1" class="focus:border-teal-500 focus:outline-none">
                         <option value="pitch">Pitch</option>
                         <option value="filter" selected>Filter</option>
                         <option value="lfoRate">LFO Rate</option>
@@ -250,14 +275,26 @@
                         <option value="resonance">Resonance</option>
                         <option value="distortion">Distortion</option>
                         <option value="reverbMix">Reverb Mix</option>
+                        <option value="delayMix">Delay Mix</option>
                         <option value="none">None</option>
+                    </select>
+                    <select id="map-touch-x-2" class="focus:border-teal-500 focus:outline-none">
+                        <option value="pitch">Pitch</option>
+                        <option value="filter">Filter</option>
+                        <option value="lfoRate">LFO Rate</option>
+                        <option value="lfoDepth">LFO Depth</option>
+                        <option value="resonance">Resonance</option>
+                        <option value="distortion">Distortion</option>
+                        <option value="reverbMix">Reverb Mix</option>
+                        <option value="delayMix">Delay Mix</option>
+                        <option value="none" selected>None</option>
                     </select>
                 </div>
 
                 <!-- Touch Y -->
                 <div>
-                    <label class="block text-[10px] font-bold text-gray-400 mb-1">Touch Y →</label>
-                    <select id="map-touch-y" class="focus:border-teal-500 focus:outline-none">
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1">Touch Y Inputs</label>
+                    <select id="map-touch-y-1" class="focus:border-teal-500 focus:outline-none">
                         <option value="pitch">Pitch</option>
                         <option value="filter">Filter</option>
                         <option value="lfoRate" selected>LFO Rate</option>
@@ -265,7 +302,19 @@
                         <option value="resonance">Resonance</option>
                         <option value="distortion">Distortion</option>
                         <option value="reverbMix">Reverb Mix</option>
+                        <option value="delayMix">Delay Mix</option>
                         <option value="none">None</option>
+                    </select>
+                    <select id="map-touch-y-2" class="focus:border-teal-500 focus:outline-none">
+                        <option value="pitch">Pitch</option>
+                        <option value="filter">Filter</option>
+                        <option value="lfoRate">LFO Rate</option>
+                        <option value="lfoDepth">LFO Depth</option>
+                        <option value="resonance">Resonance</option>
+                        <option value="distortion">Distortion</option>
+                        <option value="reverbMix">Reverb Mix</option>
+                        <option value="delayMix">Delay Mix</option>
+                        <option value="none" selected>None</option>
                     </select>
                 </div>
             </div>
@@ -371,8 +420,8 @@
                         <label class="text-[10px]">LFO Rate</label>
                         <select id="lfo-target" class="w-16 h-4 text-[9px] p-0 border-gray-700">
                             <option value="pitch">Pitch</option>
-                            <option value="filter" selected>Filter</option>
-                            <option value="none">Off</option>
+                            <option value="filter">Filter</option>
+                            <option value="none" selected>Off</option>
                         </select>
                     </div>
                     <input type="range" id="lfo-rate" min="0.1" max="20" step="0.1" value="3.1">
@@ -460,7 +509,9 @@
         let filterNode;
         let lfo;
         let lfoGain;
-        let distNode; 
+        let distGain; // Input gain for distortion drive
+        let distNode; // Static wave shaper
+        let distComp; // Compensation gain (optional, simplifies output level)
         let analyser;
         
         let delayNode, delayFeedback, delayDry, delayWet;
@@ -503,10 +554,14 @@
         const sensorPermBtn = document.getElementById('sensor-perm-btn');
         
         // Mappings
-        const mapCamera = document.getElementById('map-camera');
-        const mapTilt = document.getElementById('map-tilt');
-        const mapTouchX = document.getElementById('map-touch-x');
-        const mapTouchY = document.getElementById('map-touch-y');
+        const mapCamera1 = document.getElementById('map-camera-1');
+        const mapCamera2 = document.getElementById('map-camera-2');
+        const mapTilt1 = document.getElementById('map-tilt-1');
+        const mapTilt2 = document.getElementById('map-tilt-2');
+        const mapTouchX1 = document.getElementById('map-touch-x-1');
+        const mapTouchX2 = document.getElementById('map-touch-x-2');
+        const mapTouchY1 = document.getElementById('map-touch-y-1');
+        const mapTouchY2 = document.getElementById('map-touch-y-2');
 
         // Labels
         const lblXLow = document.getElementById('label-x-low');
@@ -517,13 +572,15 @@
         let animationId;
         let baseLightLevel = 128;
         
-        function makeDistortionCurve(amount) {
-            let k = typeof amount === 'number' ? amount : 50;
+        // Static Soft Clip Curve
+        function makeSoftClipCurve(amount) {
+            let k = amount;
             let n_samples = 44100;
             let curve = new Float32Array(n_samples);
             let deg = Math.PI / 180;
             for (let i = 0; i < n_samples; ++i) {
                 let x = i * 2 / n_samples - 1;
+                // Soft clipping formula
                 curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
             }
             return curve;
@@ -552,7 +609,13 @@
             lfo = audioCtx.createOscillator();
             lfoGain = audioCtx.createGain(); 
             filterNode = audioCtx.createBiquadFilter();
+            
+            // Distortion Chain
+            distGain = audioCtx.createGain();
             distNode = audioCtx.createWaveShaper();
+            distNode.curve = makeSoftClipCurve(50); // Static curve
+            distNode.oversample = '4x';
+            
             gainNode = audioCtx.createGain(); 
             masterGainNode = audioCtx.createGain(); 
             analyser = audioCtx.createAnalyser();
@@ -574,13 +637,17 @@
             lfo.type = 'sine';
             lfo.frequency.value = 3;
             lfoGain.gain.value = 0;
-            distNode.curve = makeDistortionCurve(0);
-            distNode.oversample = '4x';
+            
+            // Initial drive (input gain to shaper)
+            distGain.gain.value = 1.0; 
 
             reverbNode.buffer = createReverbImpulse(2.0);
 
             lfo.connect(lfoGain);
-            oscillator.connect(distNode);
+            
+            // Chain: Osc -> DistGain -> DistNode -> Filter -> VCA
+            oscillator.connect(distGain);
+            distGain.connect(distNode);
             distNode.connect(filterNode); 
             filterNode.connect(gainNode);
 
@@ -622,33 +689,49 @@
             const rMix = parseFloat(document.getElementById('reverb-mix').value);
             
             delayNode.delayTime.setTargetAtTime(dTime, audioCtx.currentTime, 0.1);
-            delayDry.gain.setTargetAtTime(1 - dMix, audioCtx.currentTime, 0.1);
-            delayWet.gain.setTargetAtTime(dMix, audioCtx.currentTime, 0.1);
             
-            // Reverb values will be set in applyModulations if mapped, else here.
-            // But we can set a baseline target here, and applyModulations will override if active.
-            // For simplicity, we only update here if no modulation is affecting reverb.
-            const mapsToReverb = [mapCamera.value, mapTilt.value, mapTouchX.value, mapTouchY.value].includes('reverbMix');
+            // Reverb check logic handled in applyModulations usually, but setting base is safe
+            // We'll set it here, applyModulations will overwrite if active
+            const mapsToReverb = [
+                mapCamera1.value, mapCamera2.value,
+                mapTilt1.value, mapTilt2.value,
+                mapTouchX1.value, mapTouchX2.value,
+                mapTouchY1.value, mapTouchY2.value
+            ].includes('reverbMix');
+            
             if(!mapsToReverb) {
                 reverbDry.gain.setTargetAtTime(1 - rMix, audioCtx.currentTime, 0.1);
                 reverbWet.gain.setTargetAtTime(rMix, audioCtx.currentTime, 0.1);
+            }
+            
+            // Delay check logic
+            const mapsToDelay = [
+                mapCamera1.value, mapCamera2.value,
+                mapTilt1.value, mapTilt2.value,
+                mapTouchX1.value, mapTouchX2.value,
+                mapTouchY1.value, mapTouchY2.value
+            ].includes('delayMix');
+            
+            if(!mapsToDelay) {
+                delayDry.gain.setTargetAtTime(1 - dMix, audioCtx.currentTime, 0.1);
+                delayWet.gain.setTargetAtTime(dMix, audioCtx.currentTime, 0.1);
             }
 
             const target = document.getElementById('lfo-target').value;
             try { lfoGain.disconnect(); } catch(e){}
             if (target === 'pitch') lfoGain.connect(oscillator.frequency);
             else if (target === 'filter') lfoGain.connect(filterNode.frequency);
+            
+            // Static Drive Update
+            const driveVal = parseFloat(document.getElementById('dist-drive').value);
+            // Map 0-100 to 1-20x gain
+            const gain = 1 + (driveVal / 100) * 20;
+            distGain.gain.setTargetAtTime(gain, audioCtx.currentTime, 0.1);
         }
 
         // --- MODULATION & CORE LOGIC ---
         function applyModulations() {
             if (!audioCtx) return;
-
-            // Mappings
-            const mapC = mapCamera.value;
-            const mapT = mapTilt.value;
-            const mapX = mapTouchX.value;
-            const mapY = mapTouchY.value;
 
             // Targets Accumulators
             let targets = {
@@ -658,14 +741,32 @@
                 lfoDepth: { sum: 0, count: 0 },
                 resonance: { sum: 0, count: 0 },
                 distortion: { sum: 0, count: 0 },
-                reverbMix: { sum: 0, count: 0 }
+                reverbMix: { sum: 0, count: 0 },
+                delayMix: { sum: 0, count: 0 }
+            };
+
+            // Helper to add contributions
+            const addMod = (mapping, value) => {
+                if (mapping !== 'none') {
+                    targets[mapping].sum += value;
+                    targets[mapping].count++;
+                }
             };
 
             // Add Sources (If enabled)
-            if (config.useCamera && mapC !== 'none') { targets[mapC].sum += state.cameraInput; targets[mapC].count++; }
-            if (config.useTilt && mapT !== 'none') { targets[mapT].sum += state.tiltInput; targets[mapT].count++; }
-            if (mapX !== 'none') { targets[mapX].sum += state.touchX; targets[mapX].count++; }
-            if (mapY !== 'none') { targets[mapY].sum += state.touchY; targets[mapY].count++; }
+            if (config.useCamera) {
+                addMod(mapCamera1.value, state.cameraInput);
+                addMod(mapCamera2.value, state.cameraInput);
+            }
+            if (config.useTilt) {
+                addMod(mapTilt1.value, state.tiltInput);
+                addMod(mapTilt2.value, state.tiltInput);
+            }
+            // Touch always active if present
+            addMod(mapTouchX1.value, state.touchX);
+            addMod(mapTouchX2.value, state.touchX);
+            addMod(mapTouchY1.value, state.touchY);
+            addMod(mapTouchY2.value, state.touchY);
 
             // Average
             let finalValues = {};
@@ -678,7 +779,7 @@
             }
 
             const now = audioCtx.currentTime;
-            const rampTime = 0.05;
+            const rampTime = 0.1; // Slower ramp to prevent clicks
 
             // --- PITCH ---
             if (finalValues.pitch !== null) {
@@ -690,16 +791,14 @@
             // --- FILTER ---
             let currentFilterFreq = parseFloat(document.getElementById('filter-cutoff').value);
             if (finalValues.filter !== null) {
-                currentFilterFreq = 50 + Math.pow(finalValues.filter, 2) * 5000;
-                filterNode.frequency.setTargetAtTime(currentFilterFreq, now, rampTime);
-            } else {
-                // If not modulated, allow slider update (but ensure we respect envelopes)
-                // If the filter envelope is running, we probably shouldn't slam this here.
-                // However, applyModulations runs on frame loop.
-                // If not modulated, we rely on updateBaseParams/envelopes.
-                // But for LFO safety, we need to know the freq.
-                // We'll read the param value if modulation is inactive (simulates 'resting' state)
-                // Note: Reading .value gives the base value, not the automation value.
+                // Map 50Hz to 10000Hz (Clamped)
+                let freq = 50 + Math.pow(finalValues.filter, 2) * 10000;
+                // Hard Safety Clamp
+                if (freq < 20) freq = 20;
+                if (freq > 20000) freq = 20000;
+                
+                currentFilterFreq = freq;
+                filterNode.frequency.setTargetAtTime(freq, now, rampTime);
             }
 
             // --- LFO RATE ---
@@ -718,15 +817,13 @@
                 document.getElementById('lfo-depth').value = currentDepth;
             } 
             
-            // Safety clamp for Filter Target
+            // Safety clamp for Filter Target LFO
             const lfoTarget = document.getElementById('lfo-target').value;
             if(lfoTarget === 'filter') {
-                // If filter is modulated, use calculated freq. If not, use slider.
-                let baseF = finalValues.filter !== null ? currentFilterFreq : parseFloat(document.getElementById('filter-cutoff').value);
                 // Prevent negative frequency: Depth must be < FilterFreq
-                // We clamp to 90% of filter freq to be safe
-                if(currentDepth > baseF * 0.9) {
-                    currentDepth = baseF * 0.9;
+                // We clamp modulation depth to 90% of current filter freq
+                if(currentDepth > currentFilterFreq * 0.9) {
+                    currentDepth = currentFilterFreq * 0.9;
                 }
             }
             
@@ -743,9 +840,10 @@
 
             // --- DISTORTION ---
             if (finalValues.distortion !== null) {
-                const drive = finalValues.distortion * 100;
-                distNode.curve = makeDistortionCurve(drive);
-                document.getElementById('dist-drive').value = drive;
+                const driveMod = finalValues.distortion * 100; // 0-100 visual
+                const gain = 1 + (finalValues.distortion * 20); // 1-21x
+                distGain.gain.setTargetAtTime(gain, now, rampTime);
+                document.getElementById('dist-drive').value = driveMod;
             }
             
             // --- REVERB MIX ---
@@ -754,6 +852,16 @@
                 reverbDry.gain.setTargetAtTime(1 - rMix, now, rampTime);
                 reverbWet.gain.setTargetAtTime(rMix, now, rampTime);
                 document.getElementById('reverb-mix').value = rMix;
+            } else {
+                // If not modulated, allow slider update (handled in updateBaseParams)
+            }
+            
+            // --- DELAY MIX ---
+            if (finalValues.delayMix !== null) {
+                const dMix = finalValues.delayMix;
+                delayDry.gain.setTargetAtTime(1 - dMix, now, rampTime);
+                delayWet.gain.setTargetAtTime(dMix, now, rampTime);
+                document.getElementById('delay-mix').value = dMix;
             } else {
                 // If not modulated, allow slider update (handled in updateBaseParams)
             }
@@ -778,7 +886,14 @@
             gainNode.gain.setTargetAtTime(ENVELOPE_PEAK * sus, now + atk, dec / 3);
             
             // Filter (Only if not being modulated manually)
-            const mapsToFilter = [mapCamera.value, mapTilt.value, mapTouchX.value, mapTouchY.value].includes('filter');
+            // Check all 8 slots for 'filter'
+            const maps = [
+                mapCamera1.value, mapCamera2.value, 
+                mapTilt1.value, mapTilt2.value,
+                mapTouchX1.value, mapTouchX2.value,
+                mapTouchY1.value, mapTouchY2.value
+            ];
+            const mapsToFilter = maps.includes('filter');
             
             if (!mapsToFilter) {
                 const fAtk = parseFloat(document.getElementById('f-atk').value);
@@ -809,7 +924,13 @@
             gainNode.gain.setTargetAtTime(0, now, rel / 5); 
 
             // Filter Release
-            const mapsToFilter = [mapCamera.value, mapTilt.value, mapTouchX.value, mapTouchY.value].includes('filter');
+            const maps = [
+                mapCamera1.value, mapCamera2.value, 
+                mapTilt1.value, mapTilt2.value,
+                mapTouchX1.value, mapTouchX2.value,
+                mapTouchY1.value, mapTouchY2.value
+            ];
+            const mapsToFilter = maps.includes('filter');
             if(!mapsToFilter) {
                 const fRel = parseFloat(document.getElementById('f-rel').value);
                 const baseCutoff = parseFloat(document.getElementById('filter-cutoff').value);
@@ -957,8 +1078,8 @@
         // --- UI BINDINGS ---
         
         function updatePadLabels() {
-            const mapX = mapTouchX.value;
-            const mapY = mapTouchY.value;
+            const mapX = mapTouchX1.value; // Using Slot 1 as primary label source
+            const mapY = mapTouchY1.value;
 
             const labels = {
                 'pitch': ['Low Pitch', 'High Pitch'],
@@ -968,6 +1089,7 @@
                 'resonance': ['Soft', 'Sharp'],
                 'distortion': ['Clean', 'Crunchy'],
                 'reverbMix': ['Dry', 'Wet'],
+                'delayMix': ['Dry', 'Wet'],
                 'none': ['', '']
             };
 
@@ -977,7 +1099,13 @@
             lblYLow.innerText = labels[mapY][0];
         }
 
-        [mapCamera, mapTilt, mapTouchX, mapTouchY].forEach(el => el.addEventListener('change', () => {
+        // Update labels on any mapping change
+        const mapSelects = [
+            mapCamera1, mapCamera2, mapTilt1, mapTilt2, 
+            mapTouchX1, mapTouchX2, mapTouchY1, mapTouchY2
+        ];
+        
+        mapSelects.forEach(el => el.addEventListener('change', () => {
             updatePadLabels();
             applyModulations();
         }));
@@ -1076,7 +1204,7 @@
         };
 
         // Params listeners: ADDED LFO AND CUTOFF HERE
-        const paramIds = ['master-vol', 'delay-time', 'delay-mix', 'reverb-mix', 'lfo-target', 'lfo-rate', 'lfo-depth', 'filter-cutoff', 'filter-res'];
+        const paramIds = ['master-vol', 'delay-time', 'delay-mix', 'reverb-mix', 'lfo-target', 'lfo-rate', 'lfo-depth', 'filter-cutoff', 'filter-res', 'dist-drive'];
         
         // Use applyModulations for instantaneous feedback on slider change as well
         paramIds.forEach(id => document.getElementById(id).addEventListener('input', () => {
